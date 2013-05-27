@@ -12,9 +12,9 @@
  *
  */
 
-'use strict';
 
 var module = (function(mod, $http) {
+    "use strict";
 
 /*****************************************************
  *
@@ -24,21 +24,21 @@ var module = (function(mod, $http) {
 
 
     function urlApi(name, resourceName, action, isHttps) {
-        return (isHttps ? 'https' : 'http')
-                + '://api.cloudinary.com/v1_1/'
-                + name + '/'
-                + action + '/'
-                + resourceName;
-    };
+        return (isHttps ? 'https' : 'http') +
+                '://api.cloudinary.com/v1_1/' +
+                name + '/' +
+                action + '/' +
+                resourceName;
+    }
 
     function urlRes(name, resourceParams, resourceName, isHttps) {
         return (isHttps ? 'https://cloudinary-a.akamaihd.net/'
-                        : 'http://res.cloudinary.com/')
-                + name + '/'
-                + 'image/upload/'
-                + (resoureParam == undefined ? '' : resourceName + '/')
-                + resourceName;
-    };
+                        : 'http://res.cloudinary.com/') +
+                name + '/' +
+                'image/upload/' +
+                (resourceParams === undefined ? '' : resourceName + '/') +
+                resourceName;
+    }
 
     function parametrizeIfExists(obj, propName, paramName, convert) {
         if (!obj.hasOwnProperty(propName)) {
@@ -49,21 +49,21 @@ var module = (function(mod, $http) {
         var res = '';
 
         if (convert !== undefined) {
-            res = convert(desc.value) + '';
+            res = convert(descr.value) + '';
             if (res === '') return false;
         } else {
-            res = desc.value + '';
+            res = descr.value + '';
         }
 
-        if (paramName == undefined) {
+        if (paramName === undefined) {
             paramName = propName;
         }
 
         return paramName + '_' + res;
-    };
+    }
 
     function stringify(options) {
-        if (options == undefined || !(options is Object))
+        if (options === undefined || !(options instanceof Object ))
             return undefined;
 
         var knownOpt = [
@@ -115,7 +115,7 @@ var module = (function(mod, $http) {
         }
 
         return res;
-    };
+    }
 
 /*****************************************************
  *
@@ -130,7 +130,7 @@ var module = (function(mod, $http) {
      * @return a client used to interact with cloudinary
      */
     var Cloudinary = function(cloudName, apiKey) {
-        if (cloudName == undefined || apiKey == undefined) {
+        if (cloudName === undefined || apiKey === undefined) {
             throw new Error('Cloudinary() need the client name and the api key !');
         }
 
@@ -178,15 +178,16 @@ var module = (function(mod, $http) {
      *      - density:int (for PDF only)
      *      - transformation:string apply a pre-defined transformation
      */
-    Cloudinary.prototype.getImage(imageName, https, options) {
-        if (imageName == undefined) {
+    Cloudinary.prototype.getImage = function(imageName, https, options) {
+        if (imageName === undefined) {
             throw new Error('Cloudinary.getImage() need an image name !');
         }
 
-        var resoureParam = stringify(options);
+        var resourceParams = stringify(options);
         return $http.get(urlRes(this.name, resourceParams, imageName, https));
     };
 
 
     return mod;
-})(window.cloudinary || {}, $http)
+})(window.cloudinary || {}, $http);
+
