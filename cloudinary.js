@@ -143,6 +143,7 @@ var cloudinary = (function(mod, $http) {
     /**
      * Return an $http.get request forged for downloadin an image from the
      * cloudinary CDN
+     * @return an URL string that is suitable for a GET request
      * @param imageName: the name of the image you want, choose your format
      * @param https:boolean, true if you want to download in https
      * @param options: (optional) specific options when getting images, can be:
@@ -184,10 +185,10 @@ var cloudinary = (function(mod, $http) {
         }
 
         var resourceParams = stringify(options);
-        return $http.get(urlRes(this.name, resourceParams, imageName, https));
+        return urlRes(this.name, resourceParams, imageName, https);
     };
 
 
     return mod.Cloudinary;
-})(window, $http);
+})(window);
 
