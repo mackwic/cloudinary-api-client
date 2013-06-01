@@ -27,8 +27,9 @@ var cloudinary = (function(mod, $http) {
         return (isHttps ? 'https' : 'http') +
                 '://api.cloudinary.com/v1_1/' +
                 name + '/' +
-                action + '/' +
-                resourceName;
+                'image/upload/' +
+                (action !== undefined ? action + '/' : '') +
+                (resourceName !== undefined ? resourceName : '');
     }
 
     function urlRes(name, resourceParams, resourceName, isHttps) {
@@ -38,6 +39,15 @@ var cloudinary = (function(mod, $http) {
                 'image/upload/' +
                 (resourceParams === undefined ? '' : resourceParams + '/') +
                 resourceName;
+    }
+
+    function returnValueIfExists(obj, propName, defaultValue) {
+        if (!obj.hasOwnProperty(propName)) {
+            return defaultValue;
+        } else {
+            var descr = obj.getOwnPropertyDescriptor(propName);
+            return descr.value;
+        }
     }
 
     function parametrizeIfExists(obj, propName, paramName, convert) {
@@ -117,6 +127,31 @@ var cloudinary = (function(mod, $http) {
         return res;
     }
 
+
+    function readFile(filePath, reference) {
+        var reader = new FileReader(); // TODO what about old browsers ?
+
+        if (reader === undefined) {
+            throw new Error('FileReader seems to be unsupported on your platform ! Please update your browser');
+        }
+
+        reader.onloadend = function (evt) {
+            reference.onFileReady(reader.result);
+        };
+
+        reader.onabort = function (evt) {
+            console.log('Aborting the reading of file ' + filePath);
+            reference.abort();
+        };
+
+        reader.onerror = function (evt) {
+            console.log('Error while reading the file ' + filePath + ' !\n' + evt);
+            reference.abort();
+        };
+
+        reader.readAsBinaryString(filepath);
+    }
+
 /*****************************************************
  *
  * Public functions exposed and documented
@@ -129,20 +164,21 @@ var cloudinary = (function(mod, $http) {
      * @param apiKey : your api key
      * @return a client used to interact with cloudinary
      */
-    function Cloudinary(cloudName, apiKey) {
+    function Cloudinary(cloudName, apiKey, apiSecret) {
         if (cloudName === undefined || apiKey === undefined) {
             throw new Error('Cloudinary() need the client name and the api key !');
         }
 
         this.name = cloudName;
         this.key  = apiKey;
+        this.pass = apiSecret;
         return this;
     }
     mod.Cloudinary = Cloudinary;
 
     /**
-     * Return an $http.get request forged for downloadin an image from the
-     * cloudinary CDN
+     * Return an URL forged for image downloading from the cloudinary CDN
+     *
      * @return an URL string that is suitable for a GET request
      * @param imageName: the name of the image you want, choose your format
      * @param https:boolean, true if you want to download in https
@@ -186,6 +222,73 @@ var cloudinary = (function(mod, $http) {
 
         var resourceParams = stringify(options);
         return urlRes(this.name, resourceParams, imageName, https);
+    };
+
+
+    /**
+     * This method forge an *special* XMLHttpRequest which you can (and should)
+     * provide callbacks. The request is not yet fired,
+     * fire it with returned.makeSend() function.
+     *
+     * This method takes care of all cloudinary Authentification business, and
+     * pre-set some headers. You have still time to add callback and headers,
+     * just modify the returned object.
+     *
+     * Again, fire the request with returned.makeSend() !
+     * DO *NOT* send yourself the request, the result will only be garbage !
+     * makeSend() return void, as it can wait external events to be ready.
+     *
+     * Supported Upload options:
+     *   - publicId: string, the public name of your image
+     *   - tags: string|(string list), tags assigned for later group reference
+     *   - 
+     *
+     * @return an XMLHttpRequest ready to fire a POST with makeSend()
+     *
+     */
+    Cloudinary.prototype.postImage = function(imagePath, isHttps, uploadOptions) {
+        if (imagePath === undefined) {
+            throw new Error('Cloudinary.postImage() need an image path !');
+        }
+        if (this.pass === undefined) {
+            throw new Error('Cloudinary.postImage() need your apiSecret to upload !');
+        }
+
+        var url  = urlApi(this.name);
+        var xhr  = new XMLHttpRequest();
+
+        // keep traces of the progress
+        xhr.requestReady = false;
+        xhr.fileReady    = false;
+
+        xhr.onFileReady = function (data) {
+            if (this.requestReady) {
+                this.options.file = data;
+                this.send(this.options);
+            } else {
+                this.fileData = data;
+                this.fileReady = true;
+            }
+        };
+
+        // we keep the file reference because of async reading
+        // and correct error managing
+        xhr.file = readFile(imagePath, xhr);
+
+        xhr.options = stringifyPost(options, file, this.pass);
+        xhr.responseType = 'json'; // TODO detect old broswer and polyfill
+        xhr.open('POST', url, isHttps);
+
+        xhr.makeSend = function() {
+            if (this.fileReady) {
+                this.options.file = xhr.fileData;
+                this.send(this.options);
+            } else {
+                this.requestReady = true;
+            }
+        };
+
+        return xhr;
     };
 
 
