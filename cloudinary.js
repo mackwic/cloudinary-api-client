@@ -13,8 +13,8 @@
  */
 
 
-var module = (function(mod, $http) {
-    "use strict";
+var cloudinary = (function(mod, $http) {
+    'use strict';
 
 /*****************************************************
  *
@@ -188,6 +188,6 @@ var module = (function(mod, $http) {
     };
 
 
-    return mod;
-})(window.cloudinary || {}, $http);
+    return mod.Cloudinary;
+})(window, $http);
 
