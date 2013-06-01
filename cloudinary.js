@@ -129,7 +129,7 @@ var cloudinary = (function(mod, $http) {
      * @param apiKey : your api key
      * @return a client used to interact with cloudinary
      */
-    var Cloudinary = function(cloudName, apiKey) {
+    function Cloudinary(cloudName, apiKey) {
         if (cloudName === undefined || apiKey === undefined) {
             throw new Error('Cloudinary() need the client name and the api key !');
         }
@@ -137,7 +137,7 @@ var cloudinary = (function(mod, $http) {
         this.name = cloudName;
         this.key  = apiKey;
         return this;
-    };
+    }
     mod.Cloudinary = Cloudinary;
 
     /**
@@ -167,7 +167,7 @@ var cloudinary = (function(mod, $http) {
      *              default is 0
      *      - default_image:string placeholder to get if imageName does not exists
      *
-     // next options are supported and provided for reference only
+     // next options are supported but provided for reference only
      // you have to see the official doc in order to know the effects and values
      *      - angle:int|string
      *      - effect:string
