@@ -36,7 +36,7 @@ var cloudinary = (function(mod, $http) {
                         : 'http://res.cloudinary.com/') +
                 name + '/' +
                 'image/upload/' +
-                (resourceParams === undefined ? '' : resourceName + '/') +
+                (resourceParams === undefined ? '' : resourceParams + '/') +
                 resourceName;
     }
 
